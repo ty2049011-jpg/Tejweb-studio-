@@ -68,7 +68,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 /* Public values only. NEVER put a service_role or secret key in this file. */
 const SUPABASE_URL="https://ceqmbxgwfjkcemzfoime.supabase.co",SUPABASE_KEY="sb_publishable_o6dFIDAWK-tobr1W81a7DQ_zSHpFEbe";
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const IQ=["new","reviewed","contacted","proposal_sent","negotiation","converted","rejected","archived"],PS=["pending","in_progress","review","completed"],PAY=["paid","pending","refunded"];
+const IQ=["new","reviewed","contacted","quoted","approved","in_progress","completed","cancelled","converted","rejected","archived","proposal_sent","negotiation"],PS=["pending","in_progress","review","completed"],PAY=["paid","pending","refunded"];
 const lbl=s=>s.replace(/_/g," ").replace(/^./,c=>c.toUpperCase());
 const money=(n,c)=>{try{return new Intl.NumberFormat("en-IN",{style:"currency",currency:c||"INR"}).format(n)}catch{return c+" "+n}};
 const dt=s=>s?new Date(s).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}):"—";
@@ -92,7 +92,7 @@ async function enter(u){
  if(error){await sb.auth.signOut();showLogin("Signed in, but administrator access could not be verified ("+error.message+"). Check your connection and that the database migration is applied.");return}
  if(!data){await sb.auth.signOut();showLogin("This account is signed in but is not an authorized administrator. Ask the studio owner to grant access.");return}
  $("#login").classList.add("hide");$("#app").classList.remove("hide");$("#who").textContent=u.email;
- $("#tabs").innerHTML=[["dash","Dashboard"],["inq","Inquiries"],["cli","Clients"],["pro","Projects"],["pay","Payments"]].map(([k,l])=>`<button class="tab" data-v="${k}">${l}</button>`).join("");
+ $("#tabs").innerHTML=[["dash","Dashboard"],["inq","Inquiries"],["cli","Clients"],["pro","Projects"],["pay","Payments"],["cfg","Content"]].map(([k,l])=>`<button class="tab" data-v="${k}">${l}</button>`).join("");
  go(view);
 }
 $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lb");b.disabled=true;$("#lm").textContent="";
@@ -103,7 +103,7 @@ $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lb");b.disabled=true;
 $("#lo").onclick=()=>sb.auth.signOut();
 $("#tabs").onclick=e=>{const b=e.target.closest("[data-v]");b&&go(b.dataset.v)};
 function go(v){view=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v?"page":"false"));
- state('<div class="load">Loading…</div>');({dash:vDash,inq:vInq,cli:vCli,pro:vPro,pay:vPay})[v]().catch(fail)}
+ state('<div class="load">Loading…</div>');({dash:vDash,inq:vInq,cli:vCli,pro:vPro,pay:vPay,cfg:vCfg})[v]().catch(fail)}
 
 /* ---------- Generic form dialog ---------- */
 function form(title,fields,vals,save,extra=""){
@@ -132,20 +132,22 @@ async function vDash(){
 /* ---------- Inquiries ---------- */
 async function vInq(){
  const {data,error}=await sb.from("inquiries").select("*").order("created_at",{ascending:false}).limit(300);if(error)return fail(error);
- C.inq=data;state(`<h2>Inquiries</h2><div class="bar"><div class="f"><input id="iq" type="search" placeholder="Search name, email, company" aria-label="Search"><select id="is" aria-label="Status"><option value="">All statuses</option>${IQ.map(x=>`<option value="${x}">${lbl(x)}</option>`).join("")}</select></div></div><div class="glass tw" id="it"></div>`);
+ C.inq=data;state(`<h2>Inquiries</h2><div class="bar"><div class="f"><input id="iq" type="search" placeholder="Search name, email, company" aria-label="Search"><select id="is" aria-label="Status"><option value="">All statuses</option>${IQ.map(x=>`<option value="${x}">${lbl(x)}</option>`).join("")}</select></div><button class="btn" id="ix">Export CSV</button></div><div class="glass tw" id="it"></div>`);
  $("#iq").oninput=$("#is").onchange=drawInq;drawInq();
+ $("#ix").onclick=()=>{const cols=["reference","created_at","status","priority","full_name","company","email","phone","website_type","plan","num_pages","budget","timeline","estimate","estimated_budget","description"],q=v=>{let t=String(v??"");if(/^[=+\-@\t\r]/.test(t))t="'"+t;return'"'+t.replace(/"/g,'""')+'"'};
+  const b=new Blob([[cols.join(","),...C.view.map(r=>cols.map(c=>q(r[c])).join(","))].join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="inquiries.csv";a.click();URL.revokeObjectURL(a.href)};
 }
 function drawInq(){const q=$("#iq").value.toLowerCase(),st=$("#is").value;
  const r=C.inq.filter(i=>(!st||i.status===st)&&[i.full_name,i.email,i.company,i.reference].join(" ").toLowerCase().includes(q));
- $("#it").innerHTML=r.length?`<table><thead><tr><th>Ref</th><th>Contact</th><th>Type</th><th>Budget</th><th>Date</th><th>Status</th></tr></thead><tbody>${r.map(i=>`<tr data-id="${i.id}"><td>${esc(i.reference)}</td><td><b>${esc(i.full_name)}</b><br><span style="color:var(--mut)">${esc(i.email)}<br>${esc(i.phone)}</span></td><td>${esc(i.website_type)}</td><td>${esc(i.budget)} ${esc(i.currency)}</td><td>${dt(i.created_at)}</td><td>${badge(i.status)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No inquiries found</h3><p>New website inquiries will show up here.</p></div>';
+ C.view=r;$("#it").innerHTML=r.length?`<table><thead><tr><th>Ref</th><th>Contact</th><th>Type</th><th>Budget</th><th>Date</th><th>Status</th></tr></thead><tbody>${r.map(i=>`<tr data-id="${i.id}"><td>${esc(i.reference)}</td><td><b>${esc(i.full_name)}</b><br><span style="color:var(--mut)">${esc(i.email)}<br>${esc(i.phone)}</span></td><td>${esc(i.website_type)}</td><td>${esc(i.budget)} ${esc(i.currency)}</td><td>${dt(i.created_at)}</td><td>${badge(i.status)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No inquiries found</h3><p>New website inquiries will show up here.</p></div>';
  $("#it").onclick=e=>{const t=e.target.closest("tr[data-id]");t&&inqDetail(C.inq.find(i=>i.id===t.dataset.id))}}
 function inqDetail(i){
- const f=[["Company",i.company],["Phone",i.phone],["Location",[i.city,i.country].filter(Boolean).join(", ")],["Preferred contact",i.preferred_contact],["Project",i.project_name],["Description",i.description],["Audience",i.target_audience],["Features",i.features],["References",i.reference_urls],["Domain / hosting / brand",[i.has_domain,i.has_hosting,i.has_brand].join(" / ")],["Timeline",`${i.start_date||"—"} to ${i.end_date||"—"} (${i.urgency||"—"})`],["Extra",i.extra]].filter(x=>x[1]);
+ const f=[["Company",i.company],["Phone",i.phone],["Location",[i.city,i.country].filter(Boolean).join(", ")],["Preferred contact",i.preferred_contact],["Package",i.plan],["Pages",i.num_pages],["Design style",i.design_style],["Existing site",i.existing_url],["Timeline",i.timeline],["Calculator estimate",i.estimate?money(i.estimate,"INR"):""],["Project",i.project_name],["Description",i.description],["Audience",i.target_audience],["Features",i.features],["References",i.reference_urls],["Domain / hosting / brand",[i.has_domain,i.has_hosting,i.has_brand].join(" / ")],["Timeline",`${i.start_date||"—"} to ${i.end_date||"—"} (${i.urgency||"—"})`],["Extra",i.extra]].filter(x=>x[1]);
  const d=$("#dlg");d.innerHTML=`<h3>${esc(i.reference)} · ${esc(i.full_name)}</h3><p>${esc(i.email)} · ${esc(i.website_type)} · ${esc(i.budget)} ${esc(i.currency)} · ${dt(i.created_at)}</p><dl class="dl" style="margin-top:14px">${f.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl>
- <div class="g c2"><div><label for="d_s">Status</label><select id="d_s">${IQ.map(x=>`<option value="${x}"${x===i.status?" selected":""}>${lbl(x)}</option>`).join("")}</select></div><div><label for="d_p">Priority</label><select id="d_p">${["low","normal","high"].map(x=>`<option${x===i.priority?" selected":""}>${x}</option>`).join("")}</select></div><div class="full"><label for="d_n">Internal notes</label><textarea id="d_n" rows="3">${esc(i.admin_notes)}</textarea></div></div><div class="msg err" id="gm" role="alert"></div>
+ <div class="g c2"><div><label for="d_s">Status</label><select id="d_s">${IQ.map(x=>`<option value="${x}"${x===i.status?" selected":""}>${lbl(x)}</option>`).join("")}</select></div><div><label for="d_p">Priority</label><select id="d_p">${["low","normal","high"].map(x=>`<option${x===i.priority?" selected":""}>${x}</option>`).join("")}</select></div><div><label for="d_e">Estimated budget (₹)</label><input id="d_e" type="number" min="0" step="0.01" value="${i.estimated_budget??""}"></div><div class="full"><label for="d_n">Internal notes</label><textarea id="d_n" rows="3">${esc(i.admin_notes)}</textarea></div></div><div class="msg err" id="gm" role="alert"></div>
  <div class="row"><button class="btn" id="d_c">Close</button><button class="btn" id="d_v">${i.client_id?"Create project":"Convert to client"}</button><button class="btn pri" id="d_x">Save</button></div>`;
  d.showModal();$("#d_c").onclick=()=>d.close();
- $("#d_x").onclick=async()=>{const {error}=await sb.from("inquiries").update({status:$("#d_s").value,priority:$("#d_p").value,admin_notes:$("#d_n").value.trim()||null}).eq("id",i.id);
+ $("#d_x").onclick=async()=>{const {error}=await sb.from("inquiries").update({status:$("#d_s").value,priority:$("#d_p").value,admin_notes:$("#d_n").value.trim()||null,estimated_budget:$("#d_e").value===""?null:+$("#d_e").value}).eq("id",i.id);
   if(error){$("#gm").textContent="Update failed: "+error.message;return}d.close();toast("Inquiry updated");vInq()};
  $("#d_v").onclick=async()=>{let cid=i.client_id;if(!cid){const {data,error}=await sb.rpc("convert_inquiry",{iid:i.id});if(error){$("#gm").textContent=error.message;return}cid=data;toast("Converted to client")}
   d.close();await loadRefs();projForm({client_id:cid,inquiry_id:i.id,name:i.project_name||"",description:i.description,currency:i.currency})};
@@ -198,5 +200,20 @@ async function vPay(){
   async o=>{if(!(+o.amount>0))return{message:"Amount must be greater than zero."};const {error}=await sb.from("payments").insert(o);
    if(error)return{message:error.code==="23505"?"This transaction reference is already recorded for the project.":error.message};vPay()})};
 }
+/* ---------- Content / pricing editor (writes site_config; admin-only by RLS) ---------- */
+async function vCfg(){
+ const {data,error}=await sb.from("site_config").select("*").order("key");if(error)return fail(error);C.cfg=data;
+ state(`<h2>Content and pricing</h2><p style="margin:8px 0 14px">Edit the JSON for pricing, calculator rules, contact details, FAQs and testimonials. The public site reads these values. Do not put secrets here: this data is public.</p><div class="glass" style="padding:20px"><label for="ck">Section</label><select id="ck">${data.map(r=>`<option>${esc(r.key)}</option>`).join("")}</select><label for="cv" style="margin-top:14px">JSON</label><textarea id="cv" rows="18" spellcheck="false" style="font-family:monospace;font-size:13px"></textarea><div class="msg err" id="cm2" role="alert"></div><div class="row" style="margin-top:12px"><button class="btn pri" id="cb">Save changes</button></div></div>`);
+ const load=()=>{$("#cv").value=JSON.stringify(C.cfg.find(r=>r.key===$("#ck").value).value,null,2)};$("#ck").onchange=load;load();
+ $("#cb").onclick=async()=>{let v;try{v=JSON.parse($("#cv").value)}catch(e){$("#cm2").textContent="Invalid JSON: "+e.message;return}
+  const k=$("#ck").value,bad=cfgCheck(k,v);if(bad){$("#cm2").textContent=bad;return}
+  const {error}=await sb.from("site_config").update({value:v}).eq("key",k);if(error){$("#cm2").textContent="Save failed: "+error.message;return}
+  $("#cm2").textContent="";C.cfg.find(r=>r.key===k).value=v;toast("Saved. The public site shows it on next load.")}}
+function cfgCheck(k,v){
+ if(k==="pricing"&&!(Array.isArray(v.plans)&&v.plans.every(p=>p.name&&Number.isFinite(p.price)&&p.price>=0&&Array.isArray(p.includes))))return"pricing.plans needs a name, numeric price and an includes list for each plan.";
+ if(k==="calculator"&&!(v.types&&v.complexity&&v.addons&&v.maintenance&&Number.isFinite(v.perExtraPage)&&Number.isFinite(v.includedPages)))return"calculator needs types, complexity, addons, maintenance, includedPages and perExtraPage.";
+ if(k==="faqs"&&!(Array.isArray(v)&&v.every(x=>x.q&&x.a)))return"faqs must be a list of {q, a}.";
+ if(k==="testimonials"&&!(Array.isArray(v)&&v.every(x=>x.name&&x.text)))return"testimonials must be a list of {name, role, text}. Only add genuine reviews you have permission to publish.";
+ return""}
 boot();
 </script></body></html>

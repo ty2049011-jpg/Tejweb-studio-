@@ -1,19 +1,18 @@
 # Tejweb Studio
 
-Static website + Supabase backend.
+Static site (Netlify) + Supabase backend.
 
-- `index.html`: public site (portfolio, services, 4-step inquiry form saved to Supabase)
-- `admin.html`: admin panel (login, dashboard, inquiries, clients, projects, payments)
-- `supabase/migrations/`: SQL for the database, tables and Row Level Security
-- `ADMIN-SETUP.md`: how to create the first administrator
+- `index.html` public site: services, demo portfolio, pricing, cost calculator, 6-step inquiry form, FAQ, contact, legal templates
+- `admin.html` admin panel: login, dashboard, inquiries (status, notes, estimated budget, CSV export), clients, projects, payments, Content editor (pricing, calculator, contact, FAQs, testimonials)
+- `supabase/migrations/` run 001, 002, 003 in order (already applied to project ceqmbxgwfjkcemzfoime)
+- `supabase/first_admin.sql.example` authorize your admin (see ADMIN-SETUP.md)
+- `404.html`, `robots.txt`, `sitemap.xml`, `netlify.toml`
 
-## Deploy (static hosting: Netlify, Vercel, GitHub Pages)
-1. Upload the repo as-is (no build step). `index.html` is the home page, `admin.html` is at `/admin.html`.
-2. Supabase project `ceqmbxgwfjkcemzfoime` already has migrations 001 and 002 applied. For a NEW project, run them in order in the SQL Editor and update the URL and key at the top of both HTML scripts.
-3. Follow `ADMIN-SETUP.md` to authorize your admin account and disable public sign-ups.
+## Deploy on Netlify
+Drag the folder into Netlify, or connect the repo. No build step; publish directory is `.`.
 
 ## Secrets
-Only the public URL and publishable key are in the HTML. Never commit a `service_role` / secret key or database password. Server-side keys (if added later) go in environment variables, see `.env.example`.
+Only the Supabase URL and publishable key are in the HTML. Never commit a service_role/secret key or DB password.
 
-## Status
-Database security tested via SQL simulation. Browser flows (inquiry submit, admin login, CRUD) still need testing on the hosted site.
+## Not built yet
+Client login portal, portfolio image upload and project editor, email notifications, per-client pages. Portfolio shows labelled demo projects only.
