@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin | Tejweb Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#000;--fg:#fff;--mut:#a3a3b8;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);--v:#8b5cf6;--b:#2f8cff;--grad:linear-gradient(120deg,#8b5cf6,#2f8cff);--ok:#34d399;--err:#f87171;--warn:#f5c542;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 "DM Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","DM Sans",sans-serif;margin:0;letter-spacing:-.01em}
+p{margin:0;color:var(--mut)}a{color:inherit}
+:focus-visible{outline:2px solid var(--b);outline-offset:2px;border-radius:6px}
+.hide{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 14px "DM Sans",sans-serif;cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--b)}.btn.pri{background:var(--grad);border:0}.btn.dng{border-color:var(--err);color:var(--err)}.btn[disabled]{opacity:.5;cursor:wait}
+input,select,textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;color:var(--fg);padding:11px 13px;font:400 16px "DM Sans",sans-serif}
+select option{background:#111}label{display:block;font-weight:500;font-size:.85rem;margin:0 0 5px}
+.glass{background:var(--card);border:1px solid var(--line);border-radius:18px}
+.logo{display:flex;align-items:center;gap:10px;font:800 1.1rem "Bricolage Grotesque",sans-serif}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--grad);display:grid;place-items:center;font-style:normal;font-size:.9rem}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+#login form{width:100%;max-width:380px;padding:28px;display:grid;gap:14px}
+.msg{font-size:.88rem;min-height:1.2em}.msg.err{color:var(--err)}
+#app{display:flex;flex-direction:column;min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tab{white-space:nowrap;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--mut);font:500 14px "DM Sans";cursor:pointer}
+.tab[aria-current=page]{background:var(--grad);color:#fff;border-color:transparent}
+main{padding:20px 16px;max-width:1180px;width:100%;margin:0 auto}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:14px 0}
+.bar .f{display:flex;gap:8px;flex:1;min-width:220px}.bar .f input{max-width:260px}.bar .f select{max-width:180px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.stat{padding:18px}.stat b{display:block;font:800 1.7rem "Bricolage Grotesque";word-break:break-word}.stat span{color:var(--mut);font-size:.85rem}
+@media(min-width:900px){.cards{grid-template-columns:repeat(4,1fr)}}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:500;font-size:.8rem}
+tr[data-id]{cursor:pointer}tr[data-id]:hover{background:rgba(139,92,246,.1)}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid var(--line);font-size:.78rem}
+.st-new{border-color:var(--b);color:var(--b)}.st-converted,.st-completed,.st-paid{border-color:var(--ok);color:var(--ok)}.st-rejected,.st-refunded{border-color:var(--err);color:var(--err)}.st-archived{color:var(--mut)}
+.empty,.load,.error{padding:36px;text-align:center}.error{color:var(--err)}
+dialog{background:#0d0d14;color:var(--fg);border:1px solid var(--line);border-radius:20px;padding:22px;width:calc(100% - 24px);max-width:560px;max-height:90vh}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.g{display:grid;gap:12px;margin:16px 0}@media(min-width:560px){.g.c2{grid-template-columns:1fr 1fr}.g .full{grid-column:1/-1}}
+.dl dt{color:var(--mut);font-size:.78rem}.dl dd{margin:0 0 8px;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#14141f;border:1px solid var(--line);padding:11px 18px;border-radius:12px;z-index:99;max-width:90%}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<div id="login" class="hide"><form class="glass" id="lf" novalidate>
+<div class="logo"><i>T</i>Tejweb Studio Admin</div>
+<div><label for="em">Email</label><input id="em" type="email" autocomplete="username" required></div>
+<div><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+<div class="msg err" id="lm" role="alert"></div>
+<button class="btn pri" id="lb">Sign in</button>
+<p style="font-size:.8rem">Administrator accounts are created by the studio owner. There is no public sign-up.</p></form></div>
+
+<div id="app" class="hide">
+<div class="top"><div class="logo"><i>T</i>Tejweb Studio Admin</div><div class="row"><span id="who" style="color:var(--mut);align-self:center;font-size:.85rem"></span><button class="btn" id="lo">Sign out</button></div></div>
+<nav class="tabs" aria-label="Admin sections" id="tabs"></nav>
+<main id="main"></main></div>
+<div id="toast" class="hide" role="status"></div>
+<dialog id="dlg"></dialog>
+
+<script>
+/* Public values only. NEVER put a service_role or secret key in this file. */
+const SUPABASE_URL="https://ceqmbxgwfjkcemzfoime.supabase.co",SUPABASE_KEY="sb_publishable_o6dFIDAWK-tobr1W81a7DQ_zSHpFEbe";
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const IQ=["new","reviewed","contacted","proposal_sent","negotiation","converted","rejected","archived"],PS=["pending","in_progress","review","completed"],PAY=["paid","pending","refunded"];
+const lbl=s=>s.replace(/_/g," ").replace(/^./,c=>c.toUpperCase());
+const money=(n,c)=>{try{return new Intl.NumberFormat("en-IN",{style:"currency",currency:c||"INR"}).format(n)}catch{return c+" "+n}};
+const dt=s=>s?new Date(s).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}):"—";
+const badge=s=>`<span class="badge st-${s}">${lbl(s)}</span>`;
+let sb,view="dash",C={};
+function toast(m,err){const t=$("#toast");t.textContent=m;t.style.borderColor=err?"var(--err)":"var(--ok)";t.classList.remove("hide");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.add("hide"),3500)}
+const state=h=>$("#main").innerHTML=h;
+const fail=e=>{if(/jwt|expired/i.test(e.message||"")){sb.auth.signOut();showLogin("Your session expired. Please sign in again.");return}state(`<div class="glass error">Couldn't load data: ${esc(e.message||e)}. Check that the admin migration was applied and you are signed in as an administrator.</div>`)};
+
+/* ---------- Auth ---------- */
+async function boot(){
+ sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+ const {data:{session}}=await sb.auth.getSession();
+ session?enter(session.user):showLogin();
+ sb.auth.onAuthStateChange(e=>{if(e==="SIGNED_OUT")showLogin()});
+}
+function showLogin(m){$("#app").classList.add("hide");$("#login").classList.remove("hide");$("#lm").textContent=m||"";$("#pw").value=""}
+async function enter(u){
+ // Convenience check only. Real enforcement is Row Level Security in the database.
+ const {data,error}=await sb.from("admin_profiles").select("user_id").eq("user_id",u.id).maybeSingle();
+ if(error){await sb.auth.signOut();showLogin("Signed in, but administrator access could not be verified ("+error.message+"). Check your connection and that the database migration is applied.");return}
+ if(!data){await sb.auth.signOut();showLogin("This account is signed in but is not an authorized administrator. Ask the studio owner to grant access.");return}
+ $("#login").classList.add("hide");$("#app").classList.remove("hide");$("#who").textContent=u.email;
+ $("#tabs").innerHTML=[["dash","Dashboard"],["inq","Inquiries"],["cli","Clients"],["pro","Projects"],["pay","Payments"]].map(([k,l])=>`<button class="tab" data-v="${k}">${l}</button>`).join("");
+ go(view);
+}
+$("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lb");b.disabled=true;$("#lm").textContent="";
+ const {data,error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});
+ b.disabled=false;if(error){const c=error.code||"",m=error.message||"";
+  $("#lm").textContent=c==="email_not_confirmed"?"Email not confirmed. Confirm this user in Supabase Authentication.":c==="over_request_rate_limit"||error.status===429?"Too many attempts. Wait a minute and try again.":/fetch|network/i.test(m)?"Network error. Check your connection and the Supabase URL.":/api key|apikey/i.test(m)?"Configuration error: the Supabase key is invalid.":"Invalid email or password.";return}
+ enter(data.user)};
+$("#lo").onclick=()=>sb.auth.signOut();
+$("#tabs").onclick=e=>{const b=e.target.closest("[data-v]");b&&go(b.dataset.v)};
+function go(v){view=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v?"page":"false"));
+ state('<div class="load">Loading…</div>');({dash:vDash,inq:vInq,cli:vCli,pro:vPro,pay:vPay})[v]().catch(fail)}
+
+/* ---------- Generic form dialog ---------- */
+function form(title,fields,vals,save,extra=""){
+ const d=$("#dlg");
+ d.innerHTML=`<h3>${title}</h3><form id="gf" novalidate><div class="g c2">${fields.map(([k,l,t,o,req])=>{const v=vals[k]??"",id="g_"+k;
+  const c=t==="select"?`<select id="${id}" name="${k}">${req?"":'<option value=""></option>'}${o.map(([a,b])=>`<option value="${esc(a)}"${String(v)===String(a)?" selected":""}>${esc(b)}</option>`).join("")}</select>`:t==="area"?`<textarea id="${id}" name="${k}" rows="3">${esc(v)}</textarea>`:`<input id="${id}" name="${k}" type="${t}" value="${esc(v)}" ${t==="number"?'step="0.01" min="0"':""}>`;
+  return `<div class="${t==="area"?"full":""}"><label for="${id}">${l}${req?" *":""}</label>${c}</div>`}).join("")}</div><div class="msg err" id="gm" role="alert"></div><div class="row">${extra}<button type="button" class="btn" id="gc">Cancel</button><button class="btn pri" id="gs">Save</button></div></form>`;
+ d.showModal();$("#gc").onclick=()=>d.close();
+ $("#gf").onsubmit=async e=>{e.preventDefault();const o={};
+  for(const [k,l,t,,req] of fields){let v=$("#g_"+k).value.trim();if(req&&!v){$("#gm").textContent=l+" is required.";return}o[k]=v===""?null:v}
+  $("#gs").disabled=true;const err=await save(o);$("#gs").disabled=false;
+  if(err){$("#gm").textContent=err.message||"Could not save. Check your entries.";return}d.close();toast("Saved")};
+}
+const opts=a=>a.map(x=>[x,lbl(x)]);
+
+/* ---------- Dashboard ---------- */
+async function vDash(){
+ const {data:s,error}=await sb.rpc("dashboard_stats");if(error)return fail(error);
+ const m=s.money||[],sum=k=>m.length?m.map(x=>money(x[k],x.currency)).join(" + "):money(0,"INR");
+ const cards=[["Total Clients",s.clients],["Total Projects",s.projects],["New Inquiries",s.new_inquiries],["Completed Projects",s.completed],["Pending Projects",s.pending],["Total Revenue",sum("revenue")],["Outstanding Payments",sum("outstanding")]];
+ state(`<h2>Dashboard</h2><div class="cards">${cards.map(([l,v])=>`<div class="glass stat"><b>${v}</b><span>${l}</span></div>`).join("")}</div>
+ <p style="margin-top:16px;font-size:.85rem">Revenue = paid payments minus refunds. Outstanding = project budget minus net paid, for non-archived projects. Each currency is shown separately.</p>
+ ${!s.clients&&!s.projects&&!s.new_inquiries?'<div class="glass empty" style="margin-top:16px"><h3>No data yet</h3><p>Inquiries appear when visitors submit the form. Add clients and projects from their tabs.</p></div>':""}`);
+}
+
+/* ---------- Inquiries ---------- */
+async function vInq(){
+ const {data,error}=await sb.from("inquiries").select("*").order("created_at",{ascending:false}).limit(300);if(error)return fail(error);
+ C.inq=data;state(`<h2>Inquiries</h2><div class="bar"><div class="f"><input id="iq" type="search" placeholder="Search name, email, company" aria-label="Search"><select id="is" aria-label="Status"><option value="">All statuses</option>${IQ.map(x=>`<option value="${x}">${lbl(x)}</option>`).join("")}</select></div></div><div class="glass tw" id="it"></div>`);
+ $("#iq").oninput=$("#is").onchange=drawInq;drawInq();
+}
+function drawInq(){const q=$("#iq").value.toLowerCase(),st=$("#is").value;
+ const r=C.inq.filter(i=>(!st||i.status===st)&&[i.full_name,i.email,i.company,i.reference].join(" ").toLowerCase().includes(q));
+ $("#it").innerHTML=r.length?`<table><thead><tr><th>Ref</th><th>Contact</th><th>Type</th><th>Budget</th><th>Date</th><th>Status</th></tr></thead><tbody>${r.map(i=>`<tr data-id="${i.id}"><td>${esc(i.reference)}</td><td><b>${esc(i.full_name)}</b><br><span style="color:var(--mut)">${esc(i.email)}<br>${esc(i.phone)}</span></td><td>${esc(i.website_type)}</td><td>${esc(i.budget)} ${esc(i.currency)}</td><td>${dt(i.created_at)}</td><td>${badge(i.status)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No inquiries found</h3><p>New website inquiries will show up here.</p></div>';
+ $("#it").onclick=e=>{const t=e.target.closest("tr[data-id]");t&&inqDetail(C.inq.find(i=>i.id===t.dataset.id))}}
+function inqDetail(i){
+ const f=[["Company",i.company],["Phone",i.phone],["Location",[i.city,i.country].filter(Boolean).join(", ")],["Preferred contact",i.preferred_contact],["Project",i.project_name],["Description",i.description],["Audience",i.target_audience],["Features",i.features],["References",i.reference_urls],["Domain / hosting / brand",[i.has_domain,i.has_hosting,i.has_brand].join(" / ")],["Timeline",`${i.start_date||"—"} to ${i.end_date||"—"} (${i.urgency||"—"})`],["Extra",i.extra]].filter(x=>x[1]);
+ const d=$("#dlg");d.innerHTML=`<h3>${esc(i.reference)} · ${esc(i.full_name)}</h3><p>${esc(i.email)} · ${esc(i.website_type)} · ${esc(i.budget)} ${esc(i.currency)} · ${dt(i.created_at)}</p><dl class="dl" style="margin-top:14px">${f.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl>
+ <div class="g c2"><div><label for="d_s">Status</label><select id="d_s">${IQ.map(x=>`<option value="${x}"${x===i.status?" selected":""}>${lbl(x)}</option>`).join("")}</select></div><div><label for="d_p">Priority</label><select id="d_p">${["low","normal","high"].map(x=>`<option${x===i.priority?" selected":""}>${x}</option>`).join("")}</select></div><div class="full"><label for="d_n">Internal notes</label><textarea id="d_n" rows="3">${esc(i.admin_notes)}</textarea></div></div><div class="msg err" id="gm" role="alert"></div>
+ <div class="row"><button class="btn" id="d_c">Close</button><button class="btn" id="d_v">${i.client_id?"Create project":"Convert to client"}</button><button class="btn pri" id="d_x">Save</button></div>`;
+ d.showModal();$("#d_c").onclick=()=>d.close();
+ $("#d_x").onclick=async()=>{const {error}=await sb.from("inquiries").update({status:$("#d_s").value,priority:$("#d_p").value,admin_notes:$("#d_n").value.trim()||null}).eq("id",i.id);
+  if(error){$("#gm").textContent="Update failed: "+error.message;return}d.close();toast("Inquiry updated");vInq()};
+ $("#d_v").onclick=async()=>{let cid=i.client_id;if(!cid){const {data,error}=await sb.rpc("convert_inquiry",{iid:i.id});if(error){$("#gm").textContent=error.message;return}cid=data;toast("Converted to client")}
+  d.close();await loadRefs();projForm({client_id:cid,inquiry_id:i.id,name:i.project_name||"",description:i.description,currency:i.currency})};
+}
+
+/* ---------- Clients ---------- */
+const CF=[["full_name","Full name","text",0,1],["email","Email","email",0,1],["phone","Phone","tel"],["company","Company","text"],["notes","Notes","area"]];
+async function vCli(){
+ const {data,error}=await sb.from("clients").select("*").order("created_at",{ascending:false});if(error)return fail(error);C.cli=data;
+ state(`<h2>Clients</h2><div class="bar"><div class="f"><input id="cq" type="search" placeholder="Search clients" aria-label="Search clients"></div><button class="btn pri" id="ca">Add client</button></div><div class="glass tw" id="ct"></div>`);
+ $("#ca").onclick=()=>cliForm({});$("#cq").oninput=drawCli;drawCli();
+}
+function drawCli(){const q=$("#cq").value.toLowerCase(),r=C.cli.filter(c=>[c.full_name,c.email,c.company].join(" ").toLowerCase().includes(q));
+ $("#ct").innerHTML=r.length?`<table><thead><tr><th>Name</th><th>Email / phone</th><th>Company</th><th>Added</th><th>Status</th></tr></thead><tbody>${r.map(c=>`<tr data-id="${c.id}"><td><b>${esc(c.full_name)}</b></td><td>${esc(c.email)}<br><span style="color:var(--mut)">${esc(c.phone)}</span></td><td>${esc(c.company)}</td><td>${dt(c.created_at)}</td><td>${badge(c.status==="active"?"new":"archived").replace(/New/,"Active")}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No clients yet</h3><p>Add a client or convert an inquiry.</p></div>';
+ $("#ct").onclick=e=>{const t=e.target.closest("tr[data-id]");t&&cliForm(C.cli.find(c=>c.id===t.dataset.id))}}
+function cliForm(c){const edit=!!c.id;
+ form(edit?"Edit client":"Add client",CF,c,async o=>{const {error}=edit?await sb.from("clients").update(o).eq("id",c.id):await sb.from("clients").insert(o);
+  if(error)return{message:error.code==="23505"?"A client with this email already exists.":error.message};vCli()},
+  edit?`<button type="button" class="btn dng" id="g_a">${c.status==="active"?"Archive":"Restore"}</button>`:"");
+ const a=$("#g_a");if(a)a.onclick=async()=>{const {error}=await sb.from("clients").update({status:c.status==="active"?"archived":"active"}).eq("id",c.id);if(error)return toast(error.message,1);$("#dlg").close();toast("Client updated");vCli()}}
+
+/* ---------- Projects ---------- */
+async function loadRefs(){const [a,b]=await Promise.all([sb.from("clients").select("id,full_name").eq("status","active").order("full_name"),sb.from("projects").select("id,name,client_id,archived,clients(full_name)").eq("archived",false).order("name")]);C.clients=a.data||[];C.projs=b.data||[]}
+async function vPro(){
+ const {data,error}=await sb.from("projects").select("*,clients(full_name)").order("created_at",{ascending:false});if(error)return fail(error);C.pro=data;
+ state(`<h2>Projects</h2><div class="bar"><div class="f"><input id="pq" type="search" placeholder="Search projects" aria-label="Search projects"><select id="ps" aria-label="Status"><option value="">All statuses</option>${PS.map(x=>`<option value="${x}">${lbl(x)}</option>`).join("")}</select></div><button class="btn pri" id="pa">Add project</button></div><div class="glass tw" id="pt"></div>`);
+ $("#pa").onclick=async()=>{await loadRefs();projForm({})};$("#pq").oninput=$("#ps").onchange=drawPro;drawPro();
+}
+function drawPro(){const q=$("#pq").value.toLowerCase(),s=$("#ps").value,r=C.pro.filter(p=>(!s||p.status===s)&&[p.name,p.clients?.full_name].join(" ").toLowerCase().includes(q));
+ $("#pt").innerHTML=r.length?`<table><thead><tr><th>Project</th><th>Client</th><th>Budget</th><th>Deadline</th><th>Status</th></tr></thead><tbody>${r.map(p=>`<tr data-id="${p.id}"><td><b>${esc(p.name)}</b>${p.archived?" "+badge("archived"):""}<br><span style="color:var(--mut)">${esc((p.technologies||[]).join(", "))}</span></td><td>${esc(p.clients?.full_name)}</td><td>${money(p.budget,p.currency)}</td><td>${dt(p.deadline)}</td><td>${badge(p.status==="pending"?"reviewed":p.status==="completed"?"completed":"contacted").replace(/>[^<]*</,">"+lbl(p.status)+"<")}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No projects yet</h3><p>Create a project for one of your clients.</p></div>';
+ $("#pt").onclick=async e=>{const t=e.target.closest("tr[data-id]");if(t){await loadRefs();projForm(C.pro.find(p=>p.id===t.dataset.id))}}}
+function projForm(p){const edit=!!p.id;
+ if(!C.clients.length)return toast("Add a client first.",1);
+ const F=[["client_id","Client","select",C.clients.map(c=>[c.id,c.full_name]),1],["name","Project name","text",0,1],["description","Description","area"],["website_url","Website URL (https://…)","url"],["budget","Budget","number",0,1],["currency","Currency (3 letters)","text",0,1],["start_date","Start date","date"],["deadline","Deadline","date"],["status","Status","select",opts(PS),1],["technologies","Technologies (comma separated)","text"],["internal_notes","Internal notes","area"]];
+ const v={currency:"INR",status:"pending",budget:0,...p,technologies:(p.technologies||[]).join(", ")};
+ form(edit?"Edit project":"New project",F,v,async o=>{
+  if(o.deadline&&o.start_date&&o.deadline<o.start_date)return{message:"Deadline must be on or after the start date."};
+  if(o.website_url&&!/^https?:\/\//i.test(o.website_url))return{message:"Website URL must start with http:// or https://"};
+  o.currency=(o.currency||"INR").toUpperCase();o.technologies=o.technologies?o.technologies.split(",").map(x=>x.trim()).filter(Boolean):[];if(p.inquiry_id&&!edit)o.inquiry_id=p.inquiry_id;
+  const {error}=edit?await sb.from("projects").update(o).eq("id",p.id):await sb.from("projects").insert(o);if(error)return error;go("pro")},
+  edit?`<button type="button" class="btn dng" id="g_a">${p.archived?"Restore":"Archive"}</button>`:"");
+ const a=$("#g_a");if(a)a.onclick=async()=>{const {error}=await sb.from("projects").update({archived:!p.archived}).eq("id",p.id);if(error)return toast(error.message,1);$("#dlg").close();toast("Project updated");go("pro")}}
+
+/* ---------- Payments ---------- */
+async function vPay(){
+ const {data,error}=await sb.from("payments").select("*,projects(name),clients(full_name)").order("payment_date",{ascending:false});if(error)return fail(error);
+ state(`<h2>Payments</h2><div class="bar"><p>Manual records only. No payment gateway is connected.</p><button class="btn pri" id="ya">Record payment</button></div><div class="glass tw">${data.length?`<table><thead><tr><th>Date</th><th>Project</th><th>Amount</th><th>Method / ref</th><th>Status</th></tr></thead><tbody>${data.map(p=>`<tr><td>${dt(p.payment_date)}</td><td><b>${esc(p.projects?.name)}</b><br><span style="color:var(--mut)">${esc(p.clients?.full_name)}</span></td><td>${money(p.amount,p.currency)}</td><td>${esc(p.method)}<br><span style="color:var(--mut)">${esc(p.transaction_ref)}</span></td><td>${badge(p.status)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No payments recorded</h3><p>Record a payment against a project.</p></div>'}</div>`);
+ $("#ya").onclick=async()=>{await loadRefs();if(!C.projs.length)return toast("Create a project first.",1);
+  form("Record payment",[["project_id","Project","select",C.projs.map(p=>[p.id,`${p.name} (${p.clients?.full_name})`]),1],["amount","Amount","number",0,1],["payment_date","Payment date","date",0,1],["method","Method (UPI, bank, cash…)","text"],["transaction_ref","Transaction reference","text"],["status","Status","select",opts(PAY),1],["notes","Notes","area"]],{status:"paid",payment_date:new Date().toISOString().slice(0,10)},
+  async o=>{if(!(+o.amount>0))return{message:"Amount must be greater than zero."};const {error}=await sb.from("payments").insert(o);
+   if(error)return{message:error.code==="23505"?"This transaction reference is already recorded for the project.":error.message};vPay()})};
+}
+boot();
+</script></body></html>
