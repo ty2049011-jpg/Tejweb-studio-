@@ -1,0 +1,15 @@
+:root{--bg:#080B14;--fg:#F8FAFC;--mut:#94A3B8;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.05);--grad:linear-gradient(120deg,#8b5cf6,#22d3ee);color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Inter,system-ui,sans-serif}
+h1,h2{font-family:"Space Grotesk",Inter,sans-serif;line-height:1.1;margin:0 0 14px;letter-spacing:-.02em}h1{font-size:clamp(2rem,6vw,3.4rem)}h2{font-size:clamp(1.4rem,3.5vw,2rem)}
+p,li{color:var(--mut)}a{color:inherit}:focus-visible{outline:2px solid #22d3ee;outline-offset:3px;border-radius:6px}
+.w{max-width:1000px;margin:0 auto;padding:0 20px}section{padding:44px 0}
+header{border-bottom:1px solid var(--line)}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:68px;flex-wrap:wrap}
+.logo{display:flex;gap:10px;align-items:center;font:700 1.1rem "Space Grotesk",sans-serif;text-decoration:none}.logo i{width:28px;height:28px;border-radius:8px;background:var(--grad);display:grid;place-items:center;font-style:normal}
+nav a{margin-right:18px;color:var(--mut);text-decoration:none}nav a:hover{color:var(--fg)}header nav{display:none}@media(min-width:760px){header nav{display:block}}
+.btn{display:inline-flex;align-items:center;padding:11px 20px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-weight:600;text-decoration:none;min-height:44px}.btn.pri{background:var(--grad);border:0}
+.hero{padding:56px 0 30px}.lead{font-size:1.15rem;max-width:640px;margin:0 0 24px}.row{display:flex;flex-wrap:wrap;gap:12px}.crumb{font-size:.88rem;margin-bottom:18px;color:var(--mut)}.crumb a{color:var(--mut)}
+.two{display:grid;gap:28px}@media(min-width:760px){.two{grid-template-columns:1fr 1fr}}ul{padding-left:20px;margin:0}li{margin-bottom:8px}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:10px}summary{cursor:pointer;font-weight:600;color:var(--fg)}details p{margin:10px 0 0}
+.rel{display:flex;flex-wrap:wrap;gap:10px}.rel a{padding:10px 16px;border:1px solid var(--line);border-radius:999px;text-decoration:none;background:var(--card)}.rel a:hover{border-color:#8b5cf6}
+.cta{text-align:center;padding:44px 20px;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+footer{border-top:1px solid var(--line);padding:28px 0;font-size:.9rem}

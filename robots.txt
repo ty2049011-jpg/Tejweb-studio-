@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
-Sitemap: https://tejwebstudio.netlify.app/sitemap.xml
+
+Sitemap: https://tejwebstudio.online/sitemap.xml
