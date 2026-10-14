@@ -31,3 +31,6 @@ Client login portal, portfolio image upload and project editor, email notificati
 ## Checks
 - `python3 tools/validate.py` static SEO/link checks
 - `node tools/smoke.js` runs the homepage script against a stub DOM (catches script errors and logic bugs; it is NOT a visual or real-browser test)
+
+## Verify the deployed version
+`index.html` contains `<meta name="tejweb-build" content="2026-10-14.3">`. After deploying, view the page source of https://tejwebstudio.online/ and confirm this value. If it is missing, Netlify is still serving an older upload.

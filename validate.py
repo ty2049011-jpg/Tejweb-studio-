@@ -21,6 +21,25 @@ for p,url in pages.items():
         t=h.lstrip("/")
         if h=="/":continue
         if not(os.path.exists(t) or os.path.exists(t+"index.html") or os.path.exists(t.rstrip("/")+"/index.html")):bad.append(f"{p}: broken link {h}")
+from html.parser import HTMLParser
+VOID={"meta","link","img","br","input","hr","source"}
+class P(HTMLParser):
+    def __init__(s):super().__init__();s.st=[];s.err=[]
+    def handle_starttag(s,t,a):
+        if t not in VOID:s.st.append(t)
+    def handle_endtag(s,t):
+        if t in VOID:return
+        if not s.st or s.st[-1]!=t:s.err.append(f"unexpected </{t}> (open: {s.st[-3:]})")
+        else:s.st.pop()
+for p in pages:
+    b=re.sub(r"<script.*?</script>","",open(p).read(),flags=re.S);b=re.sub(r"<style.*?</style>","",b,flags=re.S);pp=P();pp.feed(b)
+    if pp.err or pp.st:bad.append(f"{p}: tag balance {pp.err[:2]} unclosed={pp.st}")
+ix=open("index.html").read();ib=re.sub(r"<script.*?</script>","",ix,flags=re.S)
+ids=set(re.findall(r'id="([^"]+)"',ib));ROUTES={"start-project","privacy","terms","refunds"}
+for h in re.findall(r'href="#([^"]*)"',ib):
+    name=h.split("?")[0]
+    if h=="" or (name.startswith("/") and name.lstrip("/") in ROUTES|{""}) or name in ids:continue
+    bad.append("index.html: dead hash link #"+h)
 sm=open("sitemap.xml").read()
 for u in re.findall(r"<loc>([^<]+)</loc>",sm):
     if not u.startswith(D):bad.append("sitemap wrong domain "+u)
