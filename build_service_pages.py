@@ -1,4 +1,4 @@
-import json,os,html
+import json,os,html,re
 D="https://tejwebstudio.online"
 e=html.escape
 S=[
@@ -39,7 +39,7 @@ S=[
  [("Is maintenance included in the website price?","Maintenance is an optional extra. The plan and price are agreed before it starts."),("Do you maintain websites you did not build?","Share the details of your site in the project form and it will be reviewed case by case."),("Does maintenance include domain and hosting?","No. Domain and hosting are separate costs.")],
  ["business-website-development","landing-page-development","custom-web-applications"])]
 names={s[0]:s[1] for s in S}
-HEAD='''<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="/assets/service.css">'''
+HEAD='''<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">'''+"<style>"+re.sub(r"\s+"," ",open("tools/service.css").read())+"</style>"
 ORG={"@type":"Organization","@id":D+"/#org","name":"Tejweb Studio","url":D+"/","description":"Website development studio run by Tejpratap, building business websites, e-commerce sites, landing pages, portfolio sites and custom web applications.","contactPoint":{"@type":"ContactPoint","telephone":"+917595986787","contactType":"customer support"}}
 for slug,name,typ,title,desc,h1,intro,who,feat,faqs,rel in S:
     url=f"{D}/services/{slug}/"

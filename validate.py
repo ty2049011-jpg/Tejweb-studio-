@@ -7,6 +7,8 @@ for p,url in pages.items():
     def one(pat,name):
         n=len(re.findall(pat,s,re.S))
         if n!=1:bad.append(f"{p}: {name} count={n}")
+    if len(re.findall(r"<style>(.{500,}?)</style>",s,re.S))<1:bad.append(p+": no inline CSS")
+    if re.search(r'<link rel="stylesheet" href="/',s):bad.append(p+": depends on external local stylesheet")
     one(r"<title>[^<]+</title>","title");one(r'<meta name="description" content="[^"]{60,170}"',"meta description (60-170 chars)");n1=len(re.findall(r"<h1[ >]",body))
     if n1!=(2 if p=="index.html" else 1):bad.append(f"{p}: h1 count={n1}")
     m=re.search(r'<link rel="canonical" href="([^"]+)"',s)

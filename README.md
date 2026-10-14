@@ -27,3 +27,7 @@ Client login portal, portfolio image upload and project editor, email notificati
 2. Supabase > Authentication > URL Configuration: set Site URL to https://tejwebstudio.online.
 3. Google Search Console: add the domain, verify via DNS, submit https://tejwebstudio.online/sitemap.xml. Do the same in Bing Webmaster Tools.
 4. Replace `og-image.png` (a simple generated placeholder) with a branded 1200x630 image.
+
+## Checks
+- `python3 tools/validate.py` static SEO/link checks
+- `node tools/smoke.js` runs the homepage script against a stub DOM (catches script errors and logic bugs; it is NOT a visual or real-browser test)
