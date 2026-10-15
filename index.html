@@ -90,7 +90,7 @@ select option{background:#111}
 .card{overflow:hidden;display:flex;flex-direction:column;transition:transform .3s,border-color .3s}
 .card:hover{transform:translateY(-5px);border-color:var(--b)}
 .thumb{aspect-ratio:16/10;display:grid;place-items:center;font:800 2.6rem "Space Grotesk",sans-serif;position:relative}
-.demo{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);border:1px solid #f5c542;color:#f5c542;border-radius:999px;font:600 12px "Inter",sans-serif;padding:4px 10px}
+img.thumb{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover}
 .cb{padding:20px;display:flex;flex-direction:column;gap:10px;flex:1}
 .cat{color:var(--b);font-size:.85rem;font-weight:600}
 .tech{display:flex;flex-wrap:wrap;gap:6px}.tech span{font-size:.78rem;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
@@ -183,7 +183,6 @@ details.glass{padding:16px 20px;margin-bottom:10px}summary{cursor:pointer;font-w
 
 <section id="portfolio"><div class="wrap">
 <div class="head"><h2>Selected work</h2><p>Websites built for real businesses. Only projects marked public by the studio appear here.</p></div>
-<div class="banner" id="demobanner">Development preview: every project below is a <b>demo placeholder</b>, not a real client. Real projects will replace these once they are added.</div>
 <div class="tools"><div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
 <input type="search" id="q" placeholder="Search projects" aria-label="Search projects"></div>
 <div class="pg" id="pg" aria-live="polite"></div>
@@ -245,7 +244,7 @@ details.glass{padding:16px 20px;margin-bottom:10px}summary{cursor:pointer;font-w
 <div><a class="logo" href="#/"><i>T</i>Tejweb Studio</a><p style="margin-top:14px;max-width:320px">Fast, thoughtfully designed websites for ambitious brands.</p></div>
 <div><h4>Navigate</h4><ul><li><a href="#/">Home</a></li><li><a href="#/portfolio">Portfolio</a></li><li><a href="#/about">About</a></li><li><a href="#/contact">Contact</a></li></ul></div>
 <div><h4>Services</h4><ul><li><a href="#/services">Business websites</a></li><li><a href="#/services">E-commerce</a></li><li><a href="#/services">Web applications</a></li></ul></div>
-<div><h4>Connect</h4><ul><li><a data-wa href="https://wa.me/917595986787" target="_blank" rel="noopener noreferrer">WhatsApp: +91 75959 86787</a></li><li><a href="tel:+917595986787">Call: +91 75959 86787</a></li><li id="femail">Email: not added yet</li><li id="soc">Social links: not added yet</li><li><a href="#/start-project">Start a project</a></li></ul></div>
+<div><h4>Connect</h4><ul><li><a data-wa href="https://wa.me/917595986787" target="_blank" rel="noopener noreferrer">WhatsApp: +91 75959 86787</a></li><li><a href="tel:+917595986787">Call: +91 75959 86787</a></li><li id="femail">Email: not added yet</li><li id="soc">Social links: not added yet</li><li><a href="#/start-project">Start a project</a></li><li><a href="/admin.html">Admin login</a></li></ul></div>
 </div>
 <div class="copy"><span>© <span id="yr"></span> Tejweb Studio. All rights reserved.</span><span><a href="#/privacy">Privacy Policy</a> · <a href="#/terms">Terms of Service</a> · <a href="#/refunds">Refund Policy</a></span></div></div></footer>
 
@@ -254,15 +253,9 @@ details.glass{padding:16px 20px;margin-bottom:10px}summary{cursor:pointer;font-w
 <script>
 /* ---- Data ---- */
 const SUPABASE_URL="https://ceqmbxgwfjkcemzfoime.supabase.co",SUPABASE_KEY="sb_publishable_o6dFIDAWK-tobr1W81a7DQ_zSHpFEbe";
-const CONFIG={brand:"Tejweb Studio",stats:{projects:null,clients:null,years:null},demoMode:true};
+const CONFIG={brand:"Tejweb Studio",stats:{projects:null,clients:null,years:null}};
 const CATS=["Business","E-commerce","Portfolio","Restaurant","Real Estate","Web Applications"];
-const PROJECTS=[
-{slug:"demo-harbor-co",name:"Harbor & Co. (demo)",cat:"Business",d:"A sample site for a fictional consultancy with service pages and a booking flow.",t:["HTML","CSS","JavaScript"],c:["#6d28d9","#22d3ee"],live:null,featured:1,demo:1},
-{slug:"demo-lumen-store",name:"Lumen Goods (demo)",cat:"E-commerce",d:"A sample storefront with product filtering, cart and checkout layout.",t:["Next.js","Postgres"],c:["#22d3ee","#0b3d91"],live:null,featured:1,demo:1},
-{slug:"demo-aria-studio",name:"Aria Portfolio (demo)",cat:"Portfolio",d:"A sample photographer portfolio with a full-bleed gallery.",t:["React","Framer Motion"],c:["#a855f7","#4c1d95"],live:null,featured:0,demo:1},
-{slug:"demo-saffron",name:"Saffron Table (demo)",cat:"Restaurant",d:"A sample restaurant site with menu, hours and WhatsApp ordering link.",t:["HTML","CSS"],c:["#f97316","#7c3aed"],live:null,featured:1,demo:1},
-{slug:"demo-estate-nest",name:"Estate Nest (demo)",cat:"Real Estate",d:"A sample property listing site with enquiry forms.",t:["Next.js","Supabase"],c:["#10b981","#6d28d9"],live:null,featured:0,demo:1},
-{slug:"demo-metricly",name:"Metricly (demo)",cat:"Web Applications",d:"A sample analytics dashboard with authentication.",t:["TypeScript","Supabase"],c:["#7c3aed","#0891b2"],live:null,featured:0,demo:1}];
+let PROJECTS=[],projState="loading";
 const SERVICES=[
 ["🏢","Business Website Development","Credible company sites that turn visitors into enquiries.",["Clear service pages","Contact and WhatsApp ready","Mobile-first layout"],"Business Website"],
 ["🛒","E-commerce Website Development","Online stores with catalogue and checkout layouts.",["Product pages","Cart and checkout flow","Room to grow"],"E-commerce Website"],
@@ -291,12 +284,18 @@ $("#chips").innerHTML=["All",...CATS].map(c=>`<button class="chip" aria-pressed=
 $("#chips").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;shown=6;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b));draw()};
 $("#q").oninput=e=>{term=e.target.value.toLowerCase();shown=6;draw()};
 $("#more").onclick=()=>{shown+=6;draw()};
+const card=p=>`<article class="glass card">${p.img?`<img class="thumb" src="${esc(p.img)}" alt="${esc(p.name)} website screenshot" loading="lazy" decoding="async"${p.iw&&p.ih?` width="${p.iw}" height="${p.ih}"`:""}>`:`<div class="thumb" style="background:linear-gradient(135deg,${p.c[0]},${p.c[1]})" role="img" aria-label="${esc(p.name)}">${esc(p.name[0])}</div>`}<div class="cb"><span class="cat">${esc(p.cat)}</span><h3>${esc(p.name)}</h3><p>${esc(p.d)}</p><div class="tech">${p.t.map(t=>`<span>${esc(t)}</span>`).join("")}</div><div class="row"><button class="btn" data-s="${esc(p.slug)}">Project Details</button>${p.live?`<a class="btn" href="${esc(p.live)}" target="_blank" rel="noopener noreferrer">Visit Live Website</a>`:""}</div></div></article>`;
 function draw(){
- const list=PROJECTS.filter(p=>(cat==="All"||p.cat===cat)&&p.name.toLowerCase().includes(term)).sort((a,b)=>b.featured-a.featured);
- $("#pg").innerHTML=list.length?list.slice(0,shown).map(p=>`<article class="glass card"><div class="thumb" style="background:linear-gradient(135deg,${p.c[0]},${p.c[1]})" role="img" aria-label="${esc(p.name)} thumbnail">${esc(p.name[0])}${p.demo?'<span class="demo">Demo project</span>':""}</div><div class="cb"><span class="cat">${p.cat}</span><h3>${esc(p.name)}</h3><p>${esc(p.d)}</p><div class="tech">${p.t.map(t=>`<span>${t}</span>`).join("")}</div><div class="row"><button class="btn" data-s="${p.slug}">Project Details</button>${p.live?`<a class="btn" href="${p.live}" target="_blank" rel="noopener noreferrer">Live Demo</a>`:'<button class="btn" disabled>Live Demo unavailable</button>'}</div></div></article>`).join(""):`<div class="glass empty"><h3>No projects found</h3><p style="margin-top:8px">Try a different category or search term.</p></div>`;
+ const pg=$("#pg"),list=PROJECTS.filter(p=>(cat==="All"||p.cat===cat)&&p.name.toLowerCase().includes(term)).sort((a,b)=>b.featured-a.featured);
  $("#more").classList.toggle("hide",list.length<=shown);
+ if(projState==="loading"){pg.innerHTML='<div class="glass empty">Loading projects…</div>';return}
+ if(projState==="error"){pg.innerHTML='<div class="glass empty"><h3>Projects could not be loaded</h3><p style="margin-top:8px">Please refresh the page.</p></div>';return}
+ if(!PROJECTS.length){pg.innerHTML='<div class="glass empty"><h3>Projects coming soon</h3><p style="margin-top:8px">New work will be added here. <a href="#/start-project" style="text-decoration:underline">Start a project</a> to be next.</p></div>';return}
+ pg.innerHTML=list.length?list.slice(0,shown).map(card).join(""):'<div class="glass empty"><h3>No projects found</h3><p style="margin-top:8px">Try a different category or search term.</p></div>';
 }
-$("#pg").onclick=e=>{const b=e.target.closest("[data-s]");if(!b)return;const p=PROJECTS.find(x=>x.slug===b.dataset.s);$("#dgo").classList.add("hide");$("#dt").textContent=p.name;$("#dd").textContent=p.d;$("#dm").textContent="Demo placeholder, not a real client project. Real case studies will appear here once projects are added.";$("#dlg").showModal()};
+async function loadProjects(){try{const r=await fetch(SUPABASE_URL+"/rest/v1/portfolio_projects?select=id,title,category,description,technologies,live_url,image_url,image_w,image_h,completed_on,featured&published=eq.true&order=featured.desc,created_at.desc",{headers:{apikey:SUPABASE_KEY}});if(!r.ok)throw 0;
+ PROJECTS=(await r.json()).map(x=>({slug:x.id,name:x.title,cat:x.category,d:x.description,t:x.technologies||[],c:["#6d28d9","#22d3ee"],live:/^https:\/\//.test(x.live_url||"")?x.live_url:null,img:/^https:\/\//.test(x.image_url||"")?x.image_url:null,iw:x.image_w,ih:x.image_h,date:x.completed_on,featured:x.featured?1:0}));projState="ok"}catch(e){projState="error"}draw()}
+$("#pg").onclick=e=>{const b=e.target.closest("[data-s]");if(!b)return;const p=PROJECTS.find(x=>x.slug===b.dataset.s);$("#dgo").classList.add("hide");$("#dt").textContent=p.name;$("#dd").textContent=p.d;$("#dm").style.whiteSpace="pre-line";$("#dm").textContent=[p.t.length?"Technologies: "+p.t.join(", "):"",p.date?"Completed: "+new Date(p.date).toLocaleDateString("en-IN",{month:"long",year:"numeric"}):""].filter(Boolean).join("\n");$("#dlg").showModal()};
 $("#dx").onclick=()=>$("#dlg").close();
 draw();
 
@@ -434,7 +433,7 @@ async function submit(btn){
  const r=await rpc(p);st.sending=false;
  if(r.err){const b=$("#sb");b.disabled=false;b.textContent="Submit Project Inquiry";$("#e_consent").textContent=r.err;return}
  st.ref=r.ref;st.done=true;st.d={};render();scrollTo(0,0)}
-mark("top");route();renderDyn();drawCalc();loadCfg();
+mark("top");route();renderDyn();drawCalc();loadCfg();loadProjects();
 
 </script>
 </body>

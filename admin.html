@@ -58,7 +58,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 <p style="font-size:.8rem">Administrator accounts are created by the studio owner. There is no public sign-up.</p></form></div>
 
 <div id="app" class="hide">
-<div class="top"><div class="logo"><i>T</i>Tejweb Studio Admin</div><div class="row"><span id="who" style="color:var(--mut);align-self:center;font-size:.85rem"></span><button class="btn" id="lo">Sign out</button></div></div>
+<div class="top"><div class="logo"><i>T</i>Tejweb Studio Admin</div><div class="row"><span id="who" style="color:var(--mut);align-self:center;font-size:.85rem"></span><a class="btn" href="/">View website</a><button class="btn" id="lo">Sign out</button></div></div>
 <nav class="tabs" aria-label="Admin sections" id="tabs"></nav>
 <main id="main"></main></div>
 <div id="toast" class="hide" role="status"></div>
@@ -92,7 +92,7 @@ async function enter(u){
  if(error){await sb.auth.signOut();showLogin("Signed in, but administrator access could not be verified ("+error.message+"). Check your connection and that the database migration is applied.");return}
  if(!data){await sb.auth.signOut();showLogin("This account is signed in but is not an authorized administrator. Ask the studio owner to grant access.");return}
  $("#login").classList.add("hide");$("#app").classList.remove("hide");$("#who").textContent=u.email;
- $("#tabs").innerHTML=[["dash","Dashboard"],["inq","Inquiries"],["cli","Clients"],["pro","Projects"],["pay","Payments"],["cfg","Content"]].map(([k,l])=>`<button class="tab" data-v="${k}">${l}</button>`).join("");
+ $("#tabs").innerHTML=[["dash","Dashboard"],["inq","Inquiries"],["cli","Clients"],["pro","Projects"],["pay","Payments"],["port","Portfolio"],["cfg","Content"]].map(([k,l])=>`<button class="tab" data-v="${k}">${l}</button>`).join("");
  go(view);
 }
 $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lb");b.disabled=true;$("#lm").textContent="";
@@ -103,17 +103,17 @@ $("#lf").onsubmit=async e=>{e.preventDefault();const b=$("#lb");b.disabled=true;
 $("#lo").onclick=()=>sb.auth.signOut();
 $("#tabs").onclick=e=>{const b=e.target.closest("[data-v]");b&&go(b.dataset.v)};
 function go(v){view=v;document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-current",t.dataset.v===v?"page":"false"));
- state('<div class="load">Loading…</div>');({dash:vDash,inq:vInq,cli:vCli,pro:vPro,pay:vPay,cfg:vCfg})[v]().catch(fail)}
+ state('<div class="load">Loading…</div>');({dash:vDash,inq:vInq,cli:vCli,pro:vPro,pay:vPay,cfg:vCfg,port:vPort})[v]().catch(fail)}
 
 /* ---------- Generic form dialog ---------- */
 function form(title,fields,vals,save,extra=""){
  const d=$("#dlg");
  d.innerHTML=`<h3>${title}</h3><form id="gf" novalidate><div class="g c2">${fields.map(([k,l,t,o,req])=>{const v=vals[k]??"",id="g_"+k;
-  const c=t==="select"?`<select id="${id}" name="${k}">${req?"":'<option value=""></option>'}${o.map(([a,b])=>`<option value="${esc(a)}"${String(v)===String(a)?" selected":""}>${esc(b)}</option>`).join("")}</select>`:t==="area"?`<textarea id="${id}" name="${k}" rows="3">${esc(v)}</textarea>`:`<input id="${id}" name="${k}" type="${t}" value="${esc(v)}" ${t==="number"?'step="0.01" min="0"':""}>`;
+  const c=t==="select"?`<select id="${id}" name="${k}">${req?"":'<option value=""></option>'}${o.map(([a,b])=>`<option value="${esc(a)}"${String(v)===String(a)?" selected":""}>${esc(b)}</option>`).join("")}</select>`:t==="area"?`<textarea id="${id}" name="${k}" rows="3">${esc(v)}</textarea>`:`<input id="${id}" name="${k}" type="${t}" value="${esc(v)}" ${t==="number"?'step="0.01" min="0"':t==="file"?'accept="image/jpeg,image/png,image/webp"':""}>`;
   return `<div class="${t==="area"?"full":""}"><label for="${id}">${l}${req?" *":""}</label>${c}</div>`}).join("")}</div><div class="msg err" id="gm" role="alert"></div><div class="row">${extra}<button type="button" class="btn" id="gc">Cancel</button><button class="btn pri" id="gs">Save</button></div></form>`;
  d.showModal();$("#gc").onclick=()=>d.close();
  $("#gf").onsubmit=async e=>{e.preventDefault();const o={};
-  for(const [k,l,t,,req] of fields){let v=$("#g_"+k).value.trim();if(req&&!v){$("#gm").textContent=l+" is required.";return}o[k]=v===""?null:v}
+  for(const [k,l,t,,req] of fields){if(t==="file"){o[k]=$("#g_"+k).files[0]||null;continue}let v=$("#g_"+k).value.trim();if(req&&!v){$("#gm").textContent=l+" is required.";return}o[k]=v===""?null:v}
   $("#gs").disabled=true;const err=await save(o);$("#gs").disabled=false;
   if(err){$("#gm").textContent=err.message||"Could not save. Check your entries.";return}d.close();toast("Saved")};
 }
@@ -200,6 +200,36 @@ async function vPay(){
   async o=>{if(!(+o.amount>0))return{message:"Amount must be greater than zero."};const {error}=await sb.from("payments").insert(o);
    if(error)return{message:error.code==="23505"?"This transaction reference is already recorded for the project.":error.message};vPay()})};
 }
+/* ---------- Portfolio (table portfolio_projects; public sees published rows only, enforced by RLS) ---------- */
+const PCATS=["Business","E-commerce","Portfolio","Restaurant","Real Estate","Web Applications"];
+async function vPort(){
+ const {data,error}=await sb.from("portfolio_projects").select("*").order("created_at",{ascending:false});if(error)return fail(error);C.port=data;
+ state(`<h2>Portfolio</h2><div class="bar"><p>Only <b>published</b> projects appear on the public website.</p><button class="btn pri" id="pa2">Add project</button></div><div class="glass tw" id="pft">${data.length?`<table><thead><tr><th>Project</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody>${data.map(p=>`<tr data-id="${p.id}"><td><b>${esc(p.title)}</b>${p.featured?" ★":""}<br><span style="color:var(--mut)">${esc((p.technologies||[]).join(", "))}</span></td><td>${esc(p.category)}</td><td>${badge(p.published?"completed":"archived").replace(/>[^<]*</,">"+(p.published?"Published":"Draft")+"<")}</td><td><button class="btn" data-tg="${p.id}">${p.published?"Unpublish":"Publish"}</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No projects yet</h3><p>Add your first real project. It stays hidden until you publish it.</p></div>'}</div>`);
+ $("#pa2").onclick=()=>portForm({});
+ $("#pft").onclick=async e=>{const t=e.target.closest("[data-tg]");
+  if(t){const p=C.port.find(x=>x.id===t.dataset.tg);t.disabled=true;const {error}=await sb.from("portfolio_projects").update({published:!p.published,updated_at:new Date().toISOString()}).eq("id",p.id);if(error){toast(error.message,1);t.disabled=false;return}toast(p.published?"Unpublished":"Published");return vPort()}
+  const r=e.target.closest("tr[data-id]");r&&portForm(C.port.find(x=>x.id===r.dataset.id))};
+}
+const PF=[["title","Project title","text",0,1],["category","Category","select",PCATS.map(c=>[c,c]),1],["description","Short description","area",0,1],["technologies","Technologies (comma separated)","text"],["live_url","Live website URL (https://…)","url"],["image_url","Image URL (https://…), or upload below","url"],["image_file","Upload screenshot (JPG, PNG or WebP, max 2 MB)","file"],["completed_on","Completion date","date"],["featured","Featured","select",[["false","No"],["true","Yes"]],1],["published","Status","select",[["false","Draft (hidden)"],["true","Published"]],1]];
+async function upImg(f){
+ if(!/^image\/(jpeg|png|webp)$/.test(f.type))throw new Error("Image must be JPG, PNG or WebP.");if(f.size>2097152)throw new Error("Image must be 2 MB or smaller.");
+ const dim=await new Promise((ok,no)=>{const i=new Image(),u=URL.createObjectURL(f);i.onload=()=>{URL.revokeObjectURL(u);ok([i.naturalWidth,i.naturalHeight])};i.onerror=()=>no(new Error("Could not read the image."));i.src=u});
+ const path=crypto.randomUUID()+"."+{"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[f.type];
+ const {error}=await sb.storage.from("portfolio").upload(path,f,{contentType:f.type});if(error)throw new Error("Upload failed: "+error.message);
+ return{url:sb.storage.from("portfolio").getPublicUrl(path).data.publicUrl,w:dim[0],h:dim[1]}}
+async function rmImg(u){const m=(u||"").match(/\/storage\/v1\/object\/public\/portfolio\/([^?]+)/);if(m)await sb.storage.from("portfolio").remove([decodeURIComponent(m[1])])}
+function portForm(p){const edit=!!p.id,v={...p,technologies:(p.technologies||[]).join(", "),featured:String(!!p.featured),published:String(!!p.published)};
+ form(edit?"Edit project":"Add project",PF,v,async o=>{
+  if(o.description.length<5||o.description.length>1000)return{message:"Description must be 5 to 1000 characters."};
+  if(o.live_url&&!/^https:\/\//i.test(o.live_url))return{message:"Live URL must start with https://"};
+  if(o.image_url&&!/^https:\/\//i.test(o.image_url))return{message:"Image URL must start with https://"};
+  const row={title:o.title,category:o.category,description:o.description,technologies:o.technologies?o.technologies.split(",").map(x=>x.trim()).filter(Boolean):[],live_url:o.live_url,image_url:o.image_url,completed_on:o.completed_on,featured:o.featured==="true",published:o.published==="true",updated_at:new Date().toISOString()};
+  if(o.image_file){try{const u=await upImg(o.image_file);row.image_url=u.url;row.image_w=u.w;row.image_h=u.h}catch(e){return{message:e.message}}}
+  const {error}=edit?await sb.from("portfolio_projects").update(row).eq("id",p.id):await sb.from("portfolio_projects").insert(row);
+  if(error)return error;if(o.image_file&&p.image_url)rmImg(p.image_url);vPort()},
+  edit?'<button type="button" class="btn dng" id="g_d">Delete</button>':"");
+ const d=$("#g_d");if(d)d.onclick=async()=>{if(!confirm('Delete "'+p.title+'" permanently? This cannot be undone.'))return;const {error}=await sb.from("portfolio_projects").delete().eq("id",p.id);if(error)return toast(error.message,1);await rmImg(p.image_url);$("#dlg").close();toast("Project deleted");vPort()}}
+
 /* ---------- Content / pricing editor (writes site_config; admin-only by RLS) ---------- */
 async function vCfg(){
  const {data,error}=await sb.from("site_config").select("*").order("key");if(error)return fail(error);C.cfg=data;
