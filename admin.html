@@ -68,7 +68,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 /* Public values only. NEVER put a service_role or secret key in this file. */
 const SUPABASE_URL="https://ceqmbxgwfjkcemzfoime.supabase.co",SUPABASE_KEY="sb_publishable_o6dFIDAWK-tobr1W81a7DQ_zSHpFEbe";
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const IQ=["new","reviewed","contacted","quoted","approved","in_progress","completed","cancelled","converted","rejected","archived","proposal_sent","negotiation"],PS=["pending","in_progress","review","completed"],PAY=["paid","pending","refunded"];
+const IQ=["new","contacted","proposal_sent","in_progress","completed","rejected","reviewed","quoted","approved","cancelled","converted","archived","negotiation"],PS=["pending","in_progress","review","completed"],PAY=["paid","pending","refunded"];
 const lbl=s=>s.replace(/_/g," ").replace(/^./,c=>c.toUpperCase());
 const money=(n,c)=>{try{return new Intl.NumberFormat("en-IN",{style:"currency",currency:c||"INR"}).format(n)}catch{return c+" "+n}};
 const dt=s=>s?new Date(s).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}):"—";
@@ -201,16 +201,16 @@ async function vPay(){
    if(error)return{message:error.code==="23505"?"This transaction reference is already recorded for the project.":error.message};vPay()})};
 }
 /* ---------- Portfolio (table portfolio_projects; public sees published rows only, enforced by RLS) ---------- */
-const PCATS=["Business","E-commerce","Portfolio","Restaurant","Real Estate","Web Applications"];
+const PCATS=["Business Websites","E-commerce","Sports Websites","AI SaaS","Landing Pages","Web Applications"];
 async function vPort(){
  const {data,error}=await sb.from("portfolio_projects").select("*").order("created_at",{ascending:false});if(error)return fail(error);C.port=data;
- state(`<h2>Portfolio</h2><div class="bar"><p>Only <b>published</b> projects appear on the public website.</p><button class="btn pri" id="pa2">Add project</button></div><div class="glass tw" id="pft">${data.length?`<table><thead><tr><th>Project</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody>${data.map(p=>`<tr data-id="${p.id}"><td><b>${esc(p.title)}</b>${p.featured?" ★":""}<br><span style="color:var(--mut)">${esc((p.technologies||[]).join(", "))}</span></td><td>${esc(p.category)}</td><td>${badge(p.published?"completed":"archived").replace(/>[^<]*</,">"+(p.published?"Published":"Draft")+"<")}</td><td><button class="btn" data-tg="${p.id}">${p.published?"Unpublish":"Publish"}</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No projects yet</h3><p>Add your first real project. It stays hidden until you publish it.</p></div>'}</div>`);
+ state(`<h2>Portfolio</h2><div class="bar"><p>Only <b>published</b> projects appear on the public website.</p><button class="btn pri" id="pa2">Add project</button></div><div class="glass tw" id="pft">${data.length?`<table><thead><tr><th>Project</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody>${data.map(p=>`<tr data-id="${p.id}"><td><b>${esc(p.title)}</b>${p.featured?" ★":""}${p.is_demo?" · Demo":""}<br><span style="color:var(--mut)">${esc((p.technologies||[]).join(", "))}</span></td><td>${esc(p.category)}</td><td>${badge(p.published?"completed":"archived").replace(/>[^<]*</,">"+(p.published?"Published":"Draft")+"<")}</td><td><button class="btn" data-tg="${p.id}">${p.published?"Unpublish":"Publish"}</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty"><h3>No projects yet</h3><p>Add your first real project. It stays hidden until you publish it.</p></div>'}</div>`);
  $("#pa2").onclick=()=>portForm({});
  $("#pft").onclick=async e=>{const t=e.target.closest("[data-tg]");
   if(t){const p=C.port.find(x=>x.id===t.dataset.tg);t.disabled=true;const {error}=await sb.from("portfolio_projects").update({published:!p.published,updated_at:new Date().toISOString()}).eq("id",p.id);if(error){toast(error.message,1);t.disabled=false;return}toast(p.published?"Unpublished":"Published");return vPort()}
   const r=e.target.closest("tr[data-id]");r&&portForm(C.port.find(x=>x.id===r.dataset.id))};
 }
-const PF=[["title","Project title","text",0,1],["category","Category","select",PCATS.map(c=>[c,c]),1],["description","Short description","area",0,1],["technologies","Technologies (comma separated)","text"],["live_url","Live website URL (https://…)","url"],["image_url","Image URL (https://…), or upload below","url"],["image_file","Upload screenshot (JPG, PNG or WebP, max 2 MB)","file"],["completed_on","Completion date","date"],["featured","Featured","select",[["false","No"],["true","Yes"]],1],["published","Status","select",[["false","Draft (hidden)"],["true","Published"]],1]];
+const PF=[["title","Project title","text",0,1],["category","Category","select",PCATS.map(c=>[c,c]),1],["description","Short description","area",0,1],["technologies","Technologies (comma separated)","text"],["live_url","Live website URL (https://…)","url"],["image_url","Image URL (https://…), or upload below","url"],["image_file","Upload screenshot (JPG, PNG or WebP, max 2 MB)","file"],["completed_on","Completion date","date"],["featured","Featured","select",[["false","No"],["true","Yes"]],1],["is_demo","Demo project?","select",[["false","No, real client work"],["true","Yes, demo (shown with a Demo label)"]],1],["published","Status","select",[["false","Draft (hidden)"],["true","Published"]],1]];
 async function upImg(f){
  if(!/^image\/(jpeg|png|webp)$/.test(f.type))throw new Error("Image must be JPG, PNG or WebP.");if(f.size>2097152)throw new Error("Image must be 2 MB or smaller.");
  const dim=await new Promise((ok,no)=>{const i=new Image(),u=URL.createObjectURL(f);i.onload=()=>{URL.revokeObjectURL(u);ok([i.naturalWidth,i.naturalHeight])};i.onerror=()=>no(new Error("Could not read the image."));i.src=u});
@@ -218,12 +218,12 @@ async function upImg(f){
  const {error}=await sb.storage.from("portfolio").upload(path,f,{contentType:f.type});if(error)throw new Error("Upload failed: "+error.message);
  return{url:sb.storage.from("portfolio").getPublicUrl(path).data.publicUrl,w:dim[0],h:dim[1]}}
 async function rmImg(u){const m=(u||"").match(/\/storage\/v1\/object\/public\/portfolio\/([^?]+)/);if(m)await sb.storage.from("portfolio").remove([decodeURIComponent(m[1])])}
-function portForm(p){const edit=!!p.id,v={...p,technologies:(p.technologies||[]).join(", "),featured:String(!!p.featured),published:String(!!p.published)};
- form(edit?"Edit project":"Add project",PF,v,async o=>{
+function portForm(p){const edit=!!p.id,v={...p,technologies:(p.technologies||[]).join(", "),featured:String(!!p.featured),is_demo:String(!!p.is_demo),published:String(!!p.published)},cats=!p.category||PCATS.includes(p.category)?PCATS:[...PCATS,p.category],PF2=PF.map(f=>f[0]==="category"?[f[0],f[1],f[2],cats.map(c=>[c,c]),1]:f);
+ form(edit?"Edit project":"Add project",PF2,v,async o=>{
   if(o.description.length<5||o.description.length>1000)return{message:"Description must be 5 to 1000 characters."};
   if(o.live_url&&!/^https:\/\//i.test(o.live_url))return{message:"Live URL must start with https://"};
   if(o.image_url&&!/^https:\/\//i.test(o.image_url))return{message:"Image URL must start with https://"};
-  const row={title:o.title,category:o.category,description:o.description,technologies:o.technologies?o.technologies.split(",").map(x=>x.trim()).filter(Boolean):[],live_url:o.live_url,image_url:o.image_url,completed_on:o.completed_on,featured:o.featured==="true",published:o.published==="true",updated_at:new Date().toISOString()};
+  const row={title:o.title,category:o.category,description:o.description,technologies:o.technologies?o.technologies.split(",").map(x=>x.trim()).filter(Boolean):[],live_url:o.live_url,image_url:o.image_url,completed_on:o.completed_on,featured:o.featured==="true",is_demo:o.is_demo==="true",published:o.published==="true",updated_at:new Date().toISOString()};
   if(o.image_file){try{const u=await upImg(o.image_file);row.image_url=u.url;row.image_w=u.w;row.image_h=u.h}catch(e){return{message:e.message}}}
   const {error}=edit?await sb.from("portfolio_projects").update(row).eq("id",p.id):await sb.from("portfolio_projects").insert(row);
   if(error)return error;if(o.image_file&&p.image_url)rmImg(p.image_url);vPort()},

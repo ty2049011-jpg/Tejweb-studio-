@@ -4,7 +4,7 @@ Static site (Netlify) + Supabase backend.
 
 - `index.html` public site: services, pricing, cost calculator, 6-step inquiry form, FAQ, contact, legal templates
 - `admin.html` admin panel (login, dashboard, inquiries, clients, projects, payments, Portfolio manager, Content editor)
-- `supabase/migrations/` SQL 001 to 004 (already applied to project ceqmbxgwfjkcemzfoime)
+- `supabase/migrations/` SQL 001 to 005 (already applied to project ceqmbxgwfjkcemzfoime)
 - `supabase/first_admin.sql.example` authorize your admin (see ADMIN-SETUP.md)
 - `404.html`, `robots.txt`, `sitemap.xml`, `netlify.toml`
 
